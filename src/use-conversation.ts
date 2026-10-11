@@ -72,7 +72,9 @@ export function useConversation(firstQuestion: string, model: string | undefined
           // fail replies that never came, so the spinner stops and the reason is visible
           const from = replyIndex();
           setMessages((all) =>
-            all.map((m, i) => (m.role === "assistant" && i >= from ? { ...m, text: `${m.text}\n\nError: ${message}` } : m)),
+            all.map((m, i) =>
+              m.role === "assistant" && i >= from ? { ...m, text: `${m.text}\n\nError: ${message}` } : m,
+            ),
           );
           setPending(0);
         }),

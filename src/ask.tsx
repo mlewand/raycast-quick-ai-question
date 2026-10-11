@@ -28,7 +28,11 @@ export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
     const text = draft.trim();
     if (!text) return;
     if (ended) {
-      showToast({ style: Toast.Style.Failure, title: "Conversation ended", message: "Close this window and ask again." });
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Conversation ended",
+        message: "Close this window and ask again.",
+      });
       return;
     }
     send(text);

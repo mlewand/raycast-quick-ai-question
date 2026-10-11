@@ -18,6 +18,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.3.0
+      prettier:
+        specifier: ^3.9.10
+        version: 3.9.10
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
@@ -529,6 +532,11 @@ packages:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
     engines: {node: '>=20'}
 
+  prettier@3.9.10:
+    resolution: {integrity: sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   react@19.0.0:
     resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
     engines: {node: '>=0.10.0'}
@@ -1016,6 +1024,8 @@ snapshots:
   picomatch@4.0.7: {}
 
   powershell-utils@0.1.0: {}
+
+  prettier@3.9.10: {}
 
   react@19.0.0: {}
 

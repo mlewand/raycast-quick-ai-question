@@ -104,11 +104,14 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.8.0"
   },
   "scripts": {
-    "build": "ray build -e dist",
     "dev": "ray develop",
-    "typecheck": "tsc --noEmit"
+    "build": "ray build -e dist",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   }
 }

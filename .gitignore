@@ -1,31 +1,8 @@
-# dependencies
 node_modules/
-
-# build output
 dist/
-
-# logs
+.DS_Store
 *.log
-npm-debug.log*
-pnpm-debug.log*
-
-# env / secrets
 .env
 .env.*
-
-# macOS
-.DS_Store
-
-# editors
-.idea/
-.vscode/
-*.swp
-
-# TypeScript
-*.tsbuildinfo
-
-# Claude Code local settings
-.claude/settings.local.json
-
 # local scratch (screenshots etc.)
 .tmp/
