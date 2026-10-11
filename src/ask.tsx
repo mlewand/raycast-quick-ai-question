@@ -23,7 +23,7 @@ const transcript = (messages: Message[]) =>
 export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
   const { messages, busy, ended, send } = useConversation(props.arguments.question, props.arguments.model);
   const [draft, setDraft] = useState("");
-  const input = useRef<Form.TextField>(null);
+  const input = useRef<Form.TextArea>(null);
 
   // keep the input in view: focusing it scrolls the form to the end as the reply grows
   useEffect(() => {
@@ -48,7 +48,8 @@ export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
       isLoading={busy}
       actions={
         <ActionPanel>
-          <Action title="Send" icon={Icon.ArrowRight} onAction={submit} />
+          {/* Enter sends; Shift+Enter is left to the text area, which inserts a newline */}
+          <Action title="Send" icon={Icon.ArrowRight} shortcut={{ modifiers: [], key: "return" }} onAction={submit} />
           <Action.CopyToClipboard
             title="Copy Last Answer"
             content={lastAnswer}
@@ -74,7 +75,7 @@ export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
           <Form.Separator />
         </Fragment>
       ))}
-      <Form.TextField
+      <Form.TextArea
         id="prompt"
         ref={input}
         title=""
