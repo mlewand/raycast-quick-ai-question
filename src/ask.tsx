@@ -1,102 +1,87 @@
-import { Action, ActionPanel, Detail, LaunchProps, getPreferenceValues } from "@raycast/api";
-import { spawn } from "node:child_process";
-import { homedir, tmpdir, userInfo } from "node:os";
-import { useEffect, useState } from "react";
+import { Action, ActionPanel, Form, Icon, LaunchProps, Toast, showToast } from "@raycast/api";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { Message, useConversation } from "./use-conversation";
+
+const BOLD_OFFSETS = { upper: 0x1d5d4 - 65, lower: 0x1d5ee - 97 };
+
+/** Forms can't render bold text, so use the mathematical sans-serif bold letters. */
+const bold = (s: string) =>
+  [...s]
+    .map((c) => {
+      const code = c.charCodeAt(0);
+      if (code >= 65 && code <= 90) return String.fromCodePoint(code + BOLD_OFFSETS.upper);
+      if (code >= 97 && code <= 122) return String.fromCodePoint(code + BOLD_OFFSETS.lower);
+      return c;
+    })
+    .join("");
+
+const formatTime = (d: Date) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const sender = (m: Message) => (m.role === "user" ? "You" : "Claude");
+const transcript = (messages: Message[]) =>
+  messages.map((m) => `${sender(m)} (${formatTime(m.time)}):\n${m.text}`).join("\n\n---\n\n");
 
 export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
-  const { question, model } = props.arguments;
-  const prefs = getPreferenceValues<Preferences.Ask>();
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { messages, busy, ended, send } = useConversation(props.arguments.question, props.arguments.model);
+  const [draft, setDraft] = useState("");
+  const input = useRef<Form.TextField>(null);
 
+  // keep the input in view: focusing it scrolls the form to the end as the reply grows
   useEffect(() => {
-    const bin = (prefs.claudePath || "~/.local/bin/claude").replace(/^~(?=\/|$)/, homedir());
-    // claude looks up its keychain credentials by $USER, which GUI-launched processes may lack
-    const { username } = userInfo();
-    const env: NodeJS.ProcessEnv = { USER: username, LOGNAME: username, ...process.env };
-    if (prefs.oauthToken) env.CLAUDE_CODE_OAUTH_TOKEN = prefs.oauthToken;
+    input.current?.focus();
+  }, [messages, ended]);
 
-    const child = spawn(
-      bin,
-      [
-        "-p",
-        question,
-        "--model",
-        model || prefs.defaultModel || "haiku",
-        "--no-session-persistence",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--tools",
-        "",
-        "--strict-mcp-config",
-        "--disable-slash-commands",
-        "--setting-sources",
-        "",
-        "--system-prompt",
-        prefs.systemPrompt || "Answer as briefly as possible.",
-      ],
-      // stdin must be closed, otherwise -p waits for piped input
-      { cwd: tmpdir(), env, stdio: ["ignore", "pipe", "pipe"] },
-    );
+  const submit = () => {
+    const text = draft.trim();
+    if (!text) return;
+    if (ended) {
+      showToast({ style: Toast.Style.Failure, title: "Conversation ended", message: "Close this window and ask again." });
+      return;
+    }
+    send(text);
+    setDraft("");
+  };
 
-    let streamed = false;
-    let errored = false;
-    let buf = "";
-    const handleLine = (line: string) => {
-      if (!line.trim()) return;
-      let ev;
-      try {
-        ev = JSON.parse(line);
-      } catch {
-        return;
-      }
-      if (ev.type === "stream_event" && ev.event?.delta?.type === "text_delta") {
-        streamed = true;
-        setText((t) => t + ev.event.delta.text);
-      } else if (ev.type === "result") {
-        if (ev.is_error) {
-          errored = true;
-          setText((t) => `${t}\n\n**Error:** ${ev.result}`);
-        } else if (!streamed && typeof ev.result === "string") {
-          setText(ev.result);
-        }
-      }
-    };
-
-    child.stdout.on("data", (chunk: Buffer) => {
-      buf += chunk.toString();
-      const lines = buf.split("\n");
-      buf = lines.pop() ?? "";
-      lines.forEach(handleLine);
-    });
-    child.stderr.on("data", (d: Buffer) => setText((t) => `${t}\n\n\`${d.toString().trim()}\``));
-    child.on("error", (err) =>
-      setText(`**Could not run \`${bin}\`:** ${err.message}\n\nSet the correct path in the command preferences.`),
-    );
-    child.on("close", (code) => {
-      handleLine(buf);
-      if (code && !errored) setText((t) => `${t}\n\n\`claude exited with code ${code}\``);
-      setLoading(false);
-    });
-
-    return () => {
-      child.kill("SIGINT");
-    };
-  }, []);
+  const lastAnswer = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
 
   return (
-    <Detail
-      isLoading={loading}
-      navigationTitle={question}
-      markdown={text || "…"}
+    <Form
+      isLoading={busy}
       actions={
         <ActionPanel>
-          <Action.CopyToClipboard content={text} />
-          <Action.Paste content={text} />
+          <Action title="Send" icon={Icon.ArrowRight} onAction={submit} />
+          <Action.CopyToClipboard
+            title="Copy Last Answer"
+            content={lastAnswer}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+          />
+          <Action.Paste
+            title="Paste Last Answer"
+            content={lastAnswer}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "v" }}
+          />
+          <Action.CopyToClipboard
+            title="Copy Whole Conversation"
+            content={transcript(messages)}
+            shortcut={{ modifiers: ["cmd", "opt"], key: "c" }}
+          />
         </ActionPanel>
       }
-    />
+    >
+      {messages.map((m, i) => (
+        <Fragment key={i}>
+          <Form.Description text={`${bold(sender(m))} · ${formatTime(m.time)}`} />
+          <Form.Description text={m.text || "…"} />
+          <Form.Separator />
+        </Fragment>
+      ))}
+      <Form.TextField
+        id="prompt"
+        ref={input}
+        title=""
+        placeholder={ended ? "Conversation ended" : "Ask a follow-up…"}
+        value={draft}
+        onChange={setDraft}
+      />
+    </Form>
   );
 }
