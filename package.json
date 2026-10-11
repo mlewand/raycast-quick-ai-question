@@ -1,0 +1,113 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "quick-ai-question",
+  "title": "Quick AI Question",
+  "description": "Ask a quick question through the official claude CLI, using your Claude plan. Nothing is saved to history.",
+  "icon": "extension-icon.png",
+  "author": "mlewand",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
+  "commands": [
+    {
+      "name": "ask",
+      "title": "Ask Claude",
+      "subtitle": "Quick AI Question",
+      "description": "Ask a quick question; the answer streams in without leaving a trace in your history.",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "question",
+          "type": "text",
+          "placeholder": "Question",
+          "required": true
+        },
+        {
+          "name": "model",
+          "type": "dropdown",
+          "placeholder": "Model",
+          "required": false,
+          "data": [
+            {
+              "title": "Haiku",
+              "value": "haiku"
+            },
+            {
+              "title": "Sonnet",
+              "value": "sonnet"
+            },
+            {
+              "title": "Opus",
+              "value": "opus"
+            }
+          ]
+        }
+      ],
+      "preferences": [
+        {
+          "name": "claudePath",
+          "type": "textfield",
+          "title": "claude Binary",
+          "description": "Output of `which claude`.",
+          "required": false,
+          "default": "~/.local/bin/claude"
+        },
+        {
+          "name": "defaultModel",
+          "type": "dropdown",
+          "title": "Default Model",
+          "description": "Used when no model is picked in the command arguments.",
+          "required": false,
+          "default": "haiku",
+          "data": [
+            {
+              "title": "Haiku",
+              "value": "haiku"
+            },
+            {
+              "title": "Sonnet",
+              "value": "sonnet"
+            },
+            {
+              "title": "Opus",
+              "value": "opus"
+            }
+          ]
+        },
+        {
+          "name": "oauthToken",
+          "type": "password",
+          "title": "OAuth Token (Optional)",
+          "description": "Only needed if claude reports it is not logged in when run from Raycast. Generate with `claude setup-token`.",
+          "required": false
+        },
+        {
+          "name": "systemPrompt",
+          "type": "textfield",
+          "title": "System Prompt",
+          "required": false,
+          "default": "Answer as briefly as possible. Markdown allowed. No preamble, no follow-up offers.",
+          "description": "Instructions that keep answers short."
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.104.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.8.0"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "typecheck": "tsc --noEmit"
+  }
+}
