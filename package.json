@@ -1,6 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "quick-ai-question",
+  "version": "0.1.0",
   "title": "Quick AI Question",
   "description": "Ask a quick question through the official claude CLI, using your Claude plan. Nothing is saved to history.",
   "icon": "extension-icon.png",

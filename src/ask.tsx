@@ -1,5 +1,5 @@
 import { Action, ActionPanel, Form, Icon, LaunchProps, Toast, showToast } from "@raycast/api";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useState } from "react";
 import { Message, useConversation } from "./use-conversation";
 
 const BOLD_OFFSETS = { upper: 0x1d5d4 - 65, lower: 0x1d5ee - 97 };
@@ -23,12 +23,6 @@ const transcript = (messages: Message[]) =>
 export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
   const { messages, busy, ended, send } = useConversation(props.arguments.question, props.arguments.model);
   const [draft, setDraft] = useState("");
-  const input = useRef<Form.TextArea>(null);
-
-  // keep the input in view: focusing it scrolls the form to the end as the reply grows
-  useEffect(() => {
-    input.current?.focus();
-  }, [messages, ended]);
 
   const submit = () => {
     const text = draft.trim();
@@ -68,21 +62,21 @@ export default function Ask(props: LaunchProps<{ arguments: Arguments.Ask }>) {
         </ActionPanel>
       }
     >
-      {messages.map((m, i) => (
-        <Fragment key={i}>
-          <Form.Description text={`${bold(sender(m))} · ${formatTime(m.time)}`} />
-          <Form.Description text={m.text || "…"} />
-          <Form.Separator />
-        </Fragment>
-      ))}
+      {/* Raycast can't scroll a form, so the input is on top and messages follow newest first */}
       <Form.TextArea
         id="prompt"
-        ref={input}
         title=""
         placeholder={ended ? "Conversation ended" : "Ask a follow-up…"}
         value={draft}
         onChange={setDraft}
       />
+      {[...messages].reverse().map((m, i) => (
+        <Fragment key={messages.length - i}>
+          <Form.Description text={`${bold(sender(m))} · ${formatTime(m.time)}`} />
+          <Form.Description text={m.text || "…"} />
+          <Form.Separator />
+        </Fragment>
+      ))}
     </Form>
   );
 }
